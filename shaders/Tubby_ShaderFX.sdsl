@@ -1,0 +1,169 @@
+shader Tubby_ShaderFX : MaterialExtension
+{
+    cbuffer PerMaterial
+    {
+        stage float tubeRadius = .1;       // Radius of the tube
+        stage int positionCount = 0;
+		stage int numSides = 8;
+        stage bool isClosedPath = false;
+        stage bool smoothNormals = false;  // Toggle for smooth normals
+		stage bool segmentTexCoord = false;
+    }
+        
+    rgroup PerMaterial
+    {
+        stage StructuredBuffer<float4> PositionBuffer;
+    }
+
+    stage stream uint VertexID : SV_VertexID;
+    stage stream uint VID;
+
+    // override the vertex shader methods that handle position 
+    stage override void PreTransformPosition()
+    {
+        streams.VID = streams.VertexID;
+        streams.PositionWS = PositionBuffer[streams.VertexID];;
+    }
+
+// Helper function to append a vertex to the triangle stream
+void AppendVertex(inout TriangleStream<Output> triangleStream, float3 position, float3 normal, float2 texCoord)
+{
+    streams.PositionWS = mul(float4(position, 1.0), World);
+    streams.TexCoord = texCoord;
+    streams.normalWS = normal;
+    streams.meshNormalWS = normal;
+    streams.ShadingPosition = mul(streams.PositionWS, ViewProjection);
+    streams.DepthVS = streams.ShadingPosition.w; // important for correct depth buffer, needs "Cutoff" enabled on the MaterialExtension node
+    triangleStream.Append(streams);
+}
+
+[instance(1)]
+[maxvertexcount(56)] // Each segment emits `numSides * 2` triangles (1 quad per segment face)
+stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStream, uint gsInstanceID : SV_GSInstanceID)
+{
+    streams = input[0];
+
+    // Constants
+    const float angleStep = 2.0 * 3.14159 / numSides; // Angle step for circular cross-section
+
+    // Configuration: Check if we should close the loop
+    bool isLastSegment = (streams.VID == positionCount - 2); // Check if this is the last line segment
+    bool isFirstSegment = (input[0].VID == 0);
+
+    // Get world-space positions for the two points
+    float3 positionWS1 = PositionBuffer[streams.VID].xyz;
+    float3 positionWS2 = PositionBuffer[streams.VID + 1].xyz;
+   
+    // Compute tangent, bitangent, and normal for start point
+    float3 tangent0 = 0;
+    if(input[0].VID == input[1].VID - 1 && input[0].VID != 0) 
+        tangent0 = -normalize(PositionBuffer[input[0].VID - 1].xyz - PositionBuffer[input[0].VID + 1].xyz);
+    else
+        tangent0 = normalize(positionWS2 - positionWS1);
+
+    float3 up0 = abs(tangent0.y) < 0.99 ? float3(0, 1, 0) : float3(1, 0, 0);// Avoid degenerate "up" vector 
+    float3 bitangent0 = normalize(cross(tangent0, up0));
+    float3 normal0 = normalize(cross(bitangent0, tangent0));
+
+    // Compute tangent, bitangent, and normal for end point
+    float3 tangent1 = normalize(positionWS2 - positionWS1);
+    if(input[1].VID == input[0].VID + 1 && !(input[1].VID > positionCount - 2)) 
+        tangent1 = normalize(PositionBuffer[input[1].VID + 1].xyz - positionWS1);
+    else if(input[1].VID == input[0].VID + 1  && isLastSegment && isClosedPath){
+        positionWS2 = PositionBuffer[0].xyz;
+        tangent1 = normalize(PositionBuffer[1].xyz - PositionBuffer[0].xyz);
+    }
+    
+    float3 up1 = abs(tangent1.y) < 0.99 ? float3(0, 1, 0) : float3(1, 0, 0);// Avoid degenerate "up" vector  
+    float3 bitangent1 = normalize(cross(tangent1, up1));
+    float3 normal1 = normalize(cross(bitangent1, tangent1));
+	
+	
+	// Offset for the tube (Example using GS instancing)
+	float3 offset = float3(0, 0.2, 0) * gsInstanceID; 
+    positionWS1 += offset;
+    positionWS2 += offset;
+
+    // Emit quads between the two rings
+    for (uint i = 0; i < numSides; ++i)
+    {
+        float angle = i * angleStep;
+        float nextAngle = (i + 1) % numSides * angleStep;
+
+        // Compute cross-section offsets
+        float3 offset1a = tubeRadius * (cos(angle) * normal0 + sin(angle) * bitangent0);
+        float3 offset2a = tubeRadius * (cos(nextAngle) * normal0 + sin(nextAngle) * bitangent0);
+        float3 offset1b = tubeRadius * (cos(angle) * normal1 + sin(angle) * bitangent1);
+        float3 offset2b = tubeRadius * (cos(nextAngle) * normal1 + sin(nextAngle) * bitangent1);
+
+        // Vertex positions
+        float3 vertex1 = positionWS1 + offset1a;
+        float3 vertex2 = positionWS2 + offset1b;
+        float3 vertex3 = positionWS2 + offset2b;
+        float3 vertex4 = positionWS1 + offset2a;
+
+
+		// Calculate normals
+		float3 quadNormal = normalize(cross(vertex4 - vertex1, vertex2 - vertex1));
+
+		// Derive smooth normals from existing offsets (already contain cos/sin components)
+		float3 n1 = smoothNormals ? (offset1a / tubeRadius) : quadNormal;
+		float3 n2 = smoothNormals ? (offset1b / tubeRadius) : quadNormal;
+		float3 n4 = smoothNormals ? (offset2a / tubeRadius) : quadNormal;
+		float3 n3 = smoothNormals ? (offset2b / tubeRadius) : quadNormal;
+
+        // Texture coordinates, toggle full / per segment 
+        float segmentHeight = 1.0/positionCount;        
+        float texCoordY = input[0].VID*segmentHeight;
+		float texCoordX1 = float(i)/float(numSides);
+		float texCoordX2 = float(i+1)/float(numSides);
+		
+		float2 texCoord1 = segmentTexCoord ? (float2(texCoordX1,0)) : (float2(texCoordX1,texCoordY));
+		float2 texCoord2 = segmentTexCoord ? (float2(texCoordX2,1)) : (float2(texCoordX2,texCoordY + segmentHeight));
+
+        // Emit triangles
+        AppendVertex(triangleStream, vertex1, n1, float2(texCoord1.x, texCoord1.y));
+        AppendVertex(triangleStream, vertex2, n2, float2(texCoord1.x, texCoord2.y));
+        AppendVertex(triangleStream, vertex4, n4, float2(texCoord2.x, texCoord1.y));
+        AppendVertex(triangleStream, vertex3, n3, float2(texCoord2.x, texCoord2.y));
+    }
+
+    // Caps (unchanged)
+    if (isFirstSegment && !isClosedPath)
+    {
+        for (uint i = 0; i < numSides; ++i)
+        {
+            // Current and next angles
+            float angle = i * angleStep;
+            float nextAngle = (i + 1) % numSides * angleStep;
+
+            // Compute offsets for the circular cross-section dynamically
+            float3 offset1a = tubeRadius * (cos(angle) * normal0 + sin(angle) * bitangent0);
+            float3 offset2a = tubeRadius * (cos(nextAngle) * normal0 + sin(nextAngle) * bitangent0);
+			
+			// Emit triangle fan for the cap	
+			AppendVertex(triangleStream, positionWS1, -tangent0, float2(0.5, 0.5));			
+			AppendVertex(triangleStream, positionWS1 + offset1a, -tangent0, float2(cos(angle), sin(angle)));			
+			AppendVertex(triangleStream, positionWS1 + offset2a, -tangent0, float2(cos(nextAngle), sin(nextAngle)));
+        }
+    }
+    else if (isLastSegment && !isClosedPath)
+    {
+        for (uint i = 0; i < numSides; ++i)
+        {
+            // Current and next angles
+            float angle = i * angleStep;
+            float nextAngle = (i + 1) % numSides * angleStep;
+
+            // Compute offsets for the circular cross-section dynamically
+            float3 offset1b = tubeRadius * (cos(angle) * -normal1 + sin(angle) * bitangent1);
+            float3 offset2b = tubeRadius * (cos(nextAngle) * -normal1 + sin(nextAngle) * bitangent1);
+
+            // Emit triangle fan for the cap			
+			AppendVertex(triangleStream, positionWS2, tangent1, float2(0.5, 0.5));			
+			AppendVertex(triangleStream, positionWS2 + offset1b, tangent1, float2(cos(angle), sin(angle)));			
+			AppendVertex(triangleStream, positionWS2 + offset2b, tangent1, float2(cos(nextAngle), sin(nextAngle)));
+        }
+    }
+}
+};
