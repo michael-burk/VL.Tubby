@@ -2,8 +2,8 @@ shader Tubby_ShaderFX : MaterialExtension
 {
     cbuffer PerMaterial
     {
-        stage float tubeRadius = .1;       // Radius of the tube
         stage int positionCount = 0;
+        stage int sizeCount = 0;
 		stage int numSides = 8;
         stage bool isClosedPath = false;
         stage bool smoothNormals = false;  // Toggle for smooth normals
@@ -13,6 +13,7 @@ shader Tubby_ShaderFX : MaterialExtension
     rgroup PerMaterial
     {
         stage StructuredBuffer<float4> PositionBuffer;
+        stage StructuredBuffer<float> SizeBuffer;
     }
 
     stage stream uint VertexID : SV_VertexID;
@@ -83,6 +84,8 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
 	float3 offset = float3(0, 0.2, 0) * gsInstanceID; 
     positionWS1 += offset;
     positionWS2 += offset;
+    float tubeRadius = SizeBuffer[streams.VID % sizeCount];
+    float tubeRadius1 = sizeCount > 1 ? SizeBuffer[streams.VID + 1 % sizeCount] : tubeRadius;
 
     // Emit quads between the two rings
     for (uint i = 0; i < numSides; ++i)
@@ -93,8 +96,8 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
         // Compute cross-section offsets
         float3 offset1a = tubeRadius * (cos(angle) * normal0 + sin(angle) * bitangent0);
         float3 offset2a = tubeRadius * (cos(nextAngle) * normal0 + sin(nextAngle) * bitangent0);
-        float3 offset1b = tubeRadius * (cos(angle) * normal1 + sin(angle) * bitangent1);
-        float3 offset2b = tubeRadius * (cos(nextAngle) * normal1 + sin(nextAngle) * bitangent1);
+        float3 offset1b = tubeRadius1 * (cos(angle) * normal1 + sin(angle) * bitangent1);
+        float3 offset2b = tubeRadius1 * (cos(nextAngle) * normal1 + sin(nextAngle) * bitangent1);
 
         // Vertex positions
         float3 vertex1 = positionWS1 + offset1a;
@@ -156,8 +159,8 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
             float nextAngle = (i + 1) % numSides * angleStep;
 
             // Compute offsets for the circular cross-section dynamically
-            float3 offset1b = tubeRadius * (cos(angle) * -normal1 + sin(angle) * bitangent1);
-            float3 offset2b = tubeRadius * (cos(nextAngle) * -normal1 + sin(nextAngle) * bitangent1);
+            float3 offset1b = tubeRadius1 * (cos(angle) * -normal1 + sin(angle) * bitangent1);
+            float3 offset2b = tubeRadius1 * (cos(nextAngle) * -normal1 + sin(nextAngle) * bitangent1);
 
             // Emit triangle fan for the cap			
 			AppendVertex(triangleStream, positionWS2, tangent1, float2(0.5, 0.5));			
