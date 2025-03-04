@@ -31,8 +31,8 @@ void AppendVertex(inout TriangleStream<Output> triangleStream, float3 position, 
 {
     streams.PositionWS = mul(float4(position, 1.0), World);
     streams.TexCoord = texCoord;
-    streams.normalWS = normal;
-    streams.meshNormalWS = normal;
+    streams.normalWS = mul(normal, World);
+    streams.meshNormalWS = mul(normal, World);
     streams.ShadingPosition = mul(streams.PositionWS, ViewProjection);
     streams.DepthVS = streams.ShadingPosition.w; // important for correct depth buffer, needs "Cutoff" enabled on the MaterialExtension node
     triangleStream.Append(streams);
@@ -52,13 +52,15 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
     bool isFirstSegment = (input[0].VID == 0);
 
     // Get world-space positions for the two points
-    float3 positionWS1 = PositionBuffer[streams.VID].xyz;
-    float3 positionWS2 = PositionBuffer[streams.VID + 1].xyz;
+    float3 positionWS0 = mul(PositionBuffer[streams.VID - 1], World).xyz;
+    float3 positionWS1 = mul(PositionBuffer[streams.VID    ], World).xyz;
+    float3 positionWS2 = mul(PositionBuffer[streams.VID + 1], World).xyz;
+    float3 positionWS3 = mul(PositionBuffer[streams.VID + 2], World).xyz;
    
     // Compute tangent, bitangent, and normal for start point
     float3 tangent0 = 0;
     if(input[0].VID == input[1].VID - 1 && input[0].VID != 0) 
-        tangent0 = -normalize(PositionBuffer[input[0].VID - 1].xyz - PositionBuffer[input[0].VID + 1].xyz);
+        tangent0 = -normalize(positionWS0 - positionWS2);
     else
         tangent0 = normalize(positionWS2 - positionWS1);
 
@@ -69,7 +71,7 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
     // Compute tangent, bitangent, and normal for end point
     float3 tangent1 = normalize(positionWS2 - positionWS1);
     if(input[1].VID == input[0].VID + 1 && !(input[1].VID > positionCount - 2)) 
-        tangent1 = normalize(PositionBuffer[input[1].VID + 1].xyz - positionWS1);
+        tangent1 = normalize(positionWS3 - positionWS1);
     else if(input[1].VID == input[0].VID + 1  && isLastSegment && isClosedPath){
         positionWS2 = PositionBuffer[0].xyz;
         tangent1 = normalize(PositionBuffer[1].xyz - PositionBuffer[0].xyz);
