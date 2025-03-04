@@ -39,7 +39,7 @@ void AppendVertex(inout TriangleStream<Output> triangleStream, float3 position, 
 }
 
 [instance(1)]
-[maxvertexcount(56)] // Each segment emits `numSides * 2` triangles (1 quad per segment face)
+[maxvertexcount(64)] // Each segment emits `numSides * 2` triangles (1 quad per segment face)
 stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStream, uint gsInstanceID : SV_GSInstanceID)
 {
     streams = input[0];
@@ -146,10 +146,14 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
             float3 offset1a = tubeRadius * (cos(angle) * normal0 + sin(angle) * bitangent0);
             float3 offset2a = tubeRadius * (cos(nextAngle) * normal0 + sin(nextAngle) * bitangent0);
 			
+            triangleStream.RestartStrip();
+
 			// Emit triangle fan for the cap	
 			AppendVertex(triangleStream, positionWS1, -tangent0, float2(0.5, 0.5));			
 			AppendVertex(triangleStream, positionWS1 + offset1a, -tangent0, float2(cos(angle), sin(angle)));			
 			AppendVertex(triangleStream, positionWS1 + offset2a, -tangent0, float2(cos(nextAngle), sin(nextAngle)));
+
+            
         }
     }
     else if (isLastSegment && !isClosedPath)
@@ -161,13 +165,19 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
             float nextAngle = (i + 1) % numSides * angleStep;
 
             // Compute offsets for the circular cross-section dynamically
-            float3 offset1b = tubeRadius1 * (cos(angle) * -normal1 + sin(angle) * bitangent1);
-            float3 offset2b = tubeRadius1 * (cos(nextAngle) * -normal1 + sin(nextAngle) * bitangent1);
+            float3 offset1b = tubeRadius1 * (cos(angle) * normal1 + sin(angle) * bitangent1);
+            float3 offset2b = tubeRadius1 * (cos(nextAngle) * normal1 + sin(nextAngle) * bitangent1);
 
-            // Emit triangle fan for the cap			
-			AppendVertex(triangleStream, positionWS2, tangent1, float2(0.5, 0.5));			
-			AppendVertex(triangleStream, positionWS2 + offset1b, tangent1, float2(cos(angle), sin(angle)));			
-			AppendVertex(triangleStream, positionWS2 + offset2b, tangent1, float2(cos(nextAngle), sin(nextAngle)));
+
+            triangleStream.RestartStrip();
+
+            // Emit triangle fan for the cap
+            AppendVertex(triangleStream, positionWS2 + offset2b, tangent1, float2(cos(nextAngle), sin(nextAngle)));					
+			AppendVertex(triangleStream, positionWS2 + offset1b, tangent1, float2(cos(angle), sin(angle)));
+            AppendVertex(triangleStream, positionWS2, tangent1, float2(0.5, 0.5));  			
+			
+            
+            
         }
     }
 }
