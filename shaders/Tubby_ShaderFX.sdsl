@@ -12,7 +12,7 @@ shader Tubby_ShaderFX : MaterialExtension
         
     rgroup PerMaterial
     {
-        stage StructuredBuffer<float4> PositionBuffer;
+        stage StructuredBuffer<float3> PositionBuffer;
         stage StructuredBuffer<float> SizeBuffer;
     }
 
@@ -23,7 +23,7 @@ shader Tubby_ShaderFX : MaterialExtension
     stage override void PreTransformPosition()
     {
         streams.VID = streams.VertexID;
-        streams.PositionWS = PositionBuffer[streams.VertexID];;
+        // streams.PositionWS = PositionBuffer[streams.VertexID];
     }
 
 // Helper function to append a vertex to the triangle stream
@@ -39,13 +39,16 @@ void AppendVertex(inout TriangleStream<Output> triangleStream, float3 position, 
 }
 
 [instance(1)]
-[maxvertexcount(64)] // Each segment emits `numSides * 2` triangles (1 quad per segment face)
+[maxvertexcount(56)] // Each segment emits `numSides * 2` triangles (1 quad per segment face)
 stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStream, uint gsInstanceID : SV_GSInstanceID)
 {
     streams = input[0];
 
     // Constants
     const float angleStep = 2.0 * 3.14159 / numSides; // Angle step for circular cross-section
+
+    // // Camera position in world space
+    // float3 Eye = mul(float4(0, 0, 0, 1), ViewInverse).xyz;
 
     // Configuration: Check if we should close the loop
     bool isLastSegment = (streams.VID == positionCount - 2); // Check if this is the last line segment
@@ -107,9 +110,22 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
         float3 vertex3 = positionWS2 + offset2b;
         float3 vertex4 = positionWS1 + offset2a;
 
+        // // Calculate the center point of the face
+        // float3 center = (vertex1 + vertex2 + vertex3 + vertex4) / 4;
+
+        // // get the view direction in world space
+        // float3 viewDir = Eye - mul(float4(center,1), World);
 
 		// Calculate normals
 		float3 quadNormal = normalize(cross(vertex4 - vertex1, vertex2 - vertex1));
+
+
+        //   // Check if the face is facing the camera
+        // if (dot(viewDir, mul(float4(quadNormal,1), World)) < 0)
+        // {
+        //     continue;
+        // }
+
 
 		// Derive smooth normals from existing offsets (already contain cos/sin components)
 		float3 n1 = smoothNormals ? (offset1a / tubeRadius) : quadNormal;
@@ -125,6 +141,7 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
 		
 		float2 texCoord1 = segmentTexCoord ? (float2(texCoordX1,0)) : (float2(texCoordX1,texCoordY));
 		float2 texCoord2 = segmentTexCoord ? (float2(texCoordX2,1)) : (float2(texCoordX2,texCoordY + segmentHeight));
+
 
         // Emit triangles
         AppendVertex(triangleStream, vertex1, n1, float2(texCoord1.x, texCoord1.y));
@@ -149,9 +166,9 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
             triangleStream.RestartStrip();
 
 			// Emit triangle fan for the cap	
-			AppendVertex(triangleStream, positionWS1, -tangent0, float2(0.5, 0.5));			
-			AppendVertex(triangleStream, positionWS1 + offset1a, -tangent0, float2(cos(angle), sin(angle)));			
-			AppendVertex(triangleStream, positionWS1 + offset2a, -tangent0, float2(cos(nextAngle), sin(nextAngle)));
+			AppendVertex(triangleStream, positionWS1,            -tangent0, float2(0.0, 0.0));			
+			AppendVertex(triangleStream, positionWS1 + offset1a, -tangent0, float2(0.0, 0.0));			
+			AppendVertex(triangleStream, positionWS1 + offset2a, -tangent0, float2(0.0, 0.0));
 
             
         }
@@ -172,9 +189,9 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
             triangleStream.RestartStrip();
 
             // Emit triangle fan for the cap
-            AppendVertex(triangleStream, positionWS2 + offset2b, tangent1, float2(cos(nextAngle), sin(nextAngle)));					
-			AppendVertex(triangleStream, positionWS2 + offset1b, tangent1, float2(cos(angle), sin(angle)));
-            AppendVertex(triangleStream, positionWS2, tangent1, float2(0.5, 0.5));  			
+            AppendVertex(triangleStream, positionWS2 + offset2b, tangent1, float2(1.0, 1.0));					
+			AppendVertex(triangleStream, positionWS2 + offset1b, tangent1, float2(1.0, 1.0));
+            AppendVertex(triangleStream, positionWS2,            tangent1, float2(1.0, 1.0));  			
 			
             
             

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Document xmlns:p="property" xmlns:r="reflection" Id="OVxHOkFSirWPn6FXLC8ro4" LanguageVersion="2025.7.0-0153-g18e28d23cd" Version="0.128">
-  <NugetDependency Id="K1L9tkFTnCyL0bZTPLhocV" Location="VL.CoreLib" Version="2025.7.0-0153-g18e28d23cd" />
+<Document xmlns:p="property" xmlns:r="reflection" Id="OVxHOkFSirWPn6FXLC8ro4" LanguageVersion="2025.7.0-0170-gf0ee7a321e" Version="0.128">
+  <NugetDependency Id="K1L9tkFTnCyL0bZTPLhocV" Location="VL.CoreLib" Version="2025.7.0-0170-gf0ee7a321e" />
   <Patch Id="KLviQSmNPu0P6AJGGvRt6D">
     <Canvas Id="R8nrQSE68wGOO2fzGAi8LI" DefaultCategory="Main" BordersChecked="false" CanvasType="FullCategory" />
     <!--
@@ -24,7 +24,7 @@
       </Patch>
     </Node>
   </Patch>
-  <NugetDependency Id="QCVSPK5aR9DLAqras3ndco" Location="VL.Stride.Runtime" Version="2025.7.0-0153-g18e28d23cd" />
-  <NugetDependency Id="DfLA3iPn6dkOATcccSZXYI" Location="VL.Stride" Version="2025.7.0-0153-g18e28d23cd" />
-  <NugetDependency Id="MYoGZnZxRK2LK283absDhb" Location="VL.Stride.TextureFX" Version="2025.7.0-0153-g18e28d23cd" />
+  <NugetDependency Id="QCVSPK5aR9DLAqras3ndco" Location="VL.Stride.Runtime" Version="2025.7.0-0170-gf0ee7a321e" />
+  <NugetDependency Id="DfLA3iPn6dkOATcccSZXYI" Location="VL.Stride" Version="2025.7.0-0170-gf0ee7a321e" />
+  <NugetDependency Id="MYoGZnZxRK2LK283absDhb" Location="VL.Stride.TextureFX" Version="2025.7.0-0170-gf0ee7a321e" />
 </Document>
