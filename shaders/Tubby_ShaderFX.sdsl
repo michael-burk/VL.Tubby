@@ -4,16 +4,19 @@ shader Tubby_ShaderFX : MaterialExtension
     {
         stage int positionCount = 0;
         stage int sizeCount = 0;
-		stage int numSides = 8;
+		stage int numSides = 14;
         stage bool isClosedPath = false;
         stage bool smoothNormals = false;  // Toggle for smooth normals
 		stage bool segmentTexCoord = false;
+        stage bool chop = false;
+        stage int chunk = 0;
     }
         
     rgroup PerMaterial
     {
         stage StructuredBuffer<float3> PositionBuffer;
         stage StructuredBuffer<float> SizeBuffer;
+        stage StructuredBuffer<int> ChopBuffer;
     }
 
     stage stream uint VertexID : SV_VertexID;
@@ -37,11 +40,16 @@ void AppendVertex(inout TriangleStream<Output> triangleStream, float3 position, 
     triangleStream.Append(streams);
 }
 
-[instance(2)]
+[instance(3)]
 [maxvertexcount(56)] // Each segment emits `numSides * 2` triangles (1 quad per segment face)
 stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStream, uint gsInstanceID : SV_GSInstanceID)
-{
+{   
+
     streams = input[0];
+
+    bool _chop = false;
+
+    if(chop) _chop = ChopBuffer[streams.VID] > 0;
 
     // Constants
     const float angleStep = 2.0 * 3.14159 / numSides; // Angle step for circular cross-section
@@ -58,6 +66,13 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
     float3 positionWS1 = mul(PositionBuffer[streams.VID    ], World).xyz;
     float3 positionWS2 = mul(PositionBuffer[streams.VID + 1], World).xyz;
     float3 positionWS3 = mul(PositionBuffer[streams.VID + 2], World).xyz;
+
+    if(streams.VID % chunk == 0 && _chop)
+    {   
+        positionWS0 = positionWS1;
+        positionWS3 = positionWS2;
+    }
+
    
     // Compute tangent, bitangent, and normal for start point
     float3 tangent0 = 0;
@@ -88,11 +103,12 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
 	// float3 offset = float3(0, 0.2, 0) * gsInstanceID; 
     // positionWS1 += offset;
     // positionWS2 += offset;
+
     float tubeRadius = SizeBuffer[streams.VID % sizeCount];
     float tubeRadius1 = sizeCount > 1 ? SizeBuffer[streams.VID + 1 % sizeCount] : tubeRadius;
 
-    // positionCount % 2
-    if(gsInstanceID > 0){
+
+    if(gsInstanceID > 1 && streams.VID % chunk != 0 && _chop || gsInstanceID > 1 && !_chop){
             // Emit quads between the two rings
                 for (uint i = 0; i < numSides; ++i)
                 {
@@ -157,8 +173,9 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
 
 
 
-    // Caps (unchanged)
-    if (isFirstSegment && !isClosedPath && gsInstanceID == 0)
+    // Caps
+    // || streams.VID % 2 == 0 && gsInstanceID == 0 
+    if (isFirstSegment && !isClosedPath && gsInstanceID == 0 && !_chop || _chop && streams.VID % chunk != 0 && gsInstanceID == 0 )
     {
         for (uint i = 0; i < numSides; ++i)
         {
@@ -180,7 +197,7 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
             
         }
     }
-    else if (isLastSegment && !isClosedPath && gsInstanceID == 0)
+    if (isLastSegment && !isClosedPath && gsInstanceID == 0 && !_chop || _chop && streams.VID % chunk != 0 && gsInstanceID == 1 )
     {
         for (uint i = 0; i < numSides; ++i)
         {
