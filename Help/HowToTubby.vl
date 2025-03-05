@@ -43,7 +43,7 @@
             <Pin Id="QEYmcPsnGGNON0TFf7algt" Name="Components" Kind="InputPin" />
             <Pin Id="VPFjb3s5wExM5GGqU9BTev" Name="Children" Kind="InputPin" />
             <Pin Id="Um7IQb9w9OAPuC5WDlxjEk" Name="Name" Kind="InputPin" />
-            <Pin Id="PZfCN2Wfg1MPUplH5ZiWcz" Name="Enabled" Kind="InputPin" />
+            <Pin Id="PZfCN2Wfg1MPUplH5ZiWcz" Name="Enabled" Kind="InputPin" DefaultValue="True" />
             <Pin Id="VrFz0XvRpnkLLBjX44s5dV" Name="Entity" Kind="OutputPin" />
           </Node>
           <Pad Id="CtyAdWKkp4bMbijelKK7Bh" Comment="Roughness" Bounds="453,969,57,17" ShowValueBox="true" isIOBox="true" Value="0.15">
@@ -61,7 +61,7 @@
             <Pin Id="NmCHr6kE3V6LucAjoYWOac" Name="Metalness" Kind="InputPin" />
             <Pin Id="MjH3VcI9UIwNyEfwMGbYvM" Name="Roughness" Kind="InputPin" />
             <Pin Id="PC7nS8blnjkMymAjn4aF4U" Name="Transparency" Kind="InputPin" />
-            <Pin Id="L1RMRUDVS8oPAec72bXb4T" Name="Cull Mode" Kind="InputPin" />
+            <Pin Id="L1RMRUDVS8oPAec72bXb4T" Name="Cull Mode" Kind="InputPin" DefaultValue="None" />
             <Pin Id="CYae0Z7QBl5OTjBPe1pD7y" Name="Output" Kind="OutputPin" />
           </Node>
           <Node Bounds="387,1188,97,19" Id="S1dc8TNA41bLi3c3C5hLm1">
@@ -85,7 +85,7 @@
               <Choice Kind="ProcessAppFlag" Name="SceneWindow" />
             </p:NodeReference>
             <Pin Id="EpqhjbVAxNoMY31HgcphJ1" Name="Node Context" Kind="InputPin" IsHidden="true" />
-            <Pin Id="Moe1fjGs6CDP8qV0pv0LAh" Name="Bounds" Kind="InputPin" DefaultValue="1300, 29.714285, 893.1429, 491.42856" IsHidden="true" />
+            <Pin Id="Moe1fjGs6CDP8qV0pv0LAh" Name="Bounds" Kind="InputPin" DefaultValue="1300, 29.714285, 893.1429, 971.4286" IsHidden="true" />
             <Pin Id="EiKmCR6fxzmLfxjttSSOk5" Name="Bound to Document" Kind="InputPin" IsHidden="true" />
             <Pin Id="QnDH1Ujs7FSOWY85UcMXp4" Name="Dialog If Document Changed" Kind="InputPin" IsHidden="true" />
             <Pin Id="PwPFqqXCh4ZLpiBKU5Gryt" Name="Save Bounds" Kind="InputPin" IsHidden="true" />
@@ -566,7 +566,7 @@
               <Choice Kind="TypeFlag" Name="Vector3" />
             </p:TypeAnnotation>
           </Pad>
-          <Pad Id="Ctn8DVRyxotLusCHLJEius" Comment="" Bounds="1240,670,59,65" ShowValueBox="true" isIOBox="true" Value="-0.06, 0.4, -0.06">
+          <Pad Id="Ctn8DVRyxotLusCHLJEius" Comment="" Bounds="1240,670,59,65" ShowValueBox="true" isIOBox="true" Value="-0.05, 0.4, -0.05">
             <p:TypeAnnotation LastCategoryFullName="Collections" LastDependency="VL.CoreLib.vl">
               <Choice Kind="TypeFlag" Name="Spread" />
               <p:TypeArguments>
@@ -661,6 +661,16 @@
               <Choice Kind="TypeFlag" Name="Integer32" />
             </p:TypeAnnotation>
           </Pad>
+          <Pad Id="TJ6pbVkamO4LVCi94d5aId" Comment="Topology" Bounds="398,1231,147,15" ShowValueBox="true" isIOBox="true" Value="LineStrip">
+            <p:TypeAnnotation LastCategoryFullName="Stride.API.Graphics" LastDependency="VL.Stride.Runtime.vl">
+              <Choice Kind="TypeFlag" Name="PrimitiveType" />
+            </p:TypeAnnotation>
+          </Pad>
+          <Pad Id="LupOkLPBcyzMzmbdXGyLFz" Comment="Count" Bounds="1367,730,35,15" ShowValueBox="true" isIOBox="true" Value="199">
+            <p:TypeAnnotation LastCategoryFullName="Primitive" LastDependency="VL.CoreLib.vl">
+              <Choice Kind="TypeFlag" Name="Integer32" />
+            </p:TypeAnnotation>
+          </Pad>
         </Canvas>
         <Patch Id="UqjX9QHhgr8PtVYEfO0sDN" Name="Create" />
         <Patch Id="MhJngsQ7lKaQTpPbrksom9" Name="Update" />
@@ -680,7 +690,6 @@
         <Link Id="GqhtyupLBYCP9JeHLgqEyE" Ids="FEvqmjC0idcOj2rNT6JeB2,QNvud2aOSR1L98fB1jKkce" />
         <Link Id="FrxJV1NAME2OrBqw5vIraz" Ids="Arx4ywy2hwzP7E8kmnD6Wk,JRBbAXITQnGK995M5h688A" />
         <Link Id="J8LtsMz8Qj5PUZ8GmWtHLZ" Ids="V66PwoQXTd0MGXBPSTnmde,J2glZ4aecSOOVnlVxefAzw" />
-        <Link Id="Qq8uwRoyPd0MV4Glnn9G0l" Ids="AmaigQOP2MkOgpRNXL6M8y,SuhEYL0x0t3PbEde0KODk7" />
         <Link Id="AeHNu9L5S0fLagXLTuCSI4" Ids="NUNPQKKLv1xNFV0rPsYe14,FI0QIGrr0HuQUoRxRSZ0Gy" />
         <Link Id="SXPm0rznBj0Oebwe8sCWS1" Ids="AmaigQOP2MkOgpRNXL6M8y,AOf8mkyQQzNO3uZSHJs6ll" />
         <Link Id="MOJRv9R0B6pLTjpkZNuFIv" Ids="VrFz0XvRpnkLLBjX44s5dV,DvEe6YENObuPxATKm327yJ" />
@@ -697,11 +706,9 @@
         <Link Id="Vrbs7em1hpgLKCWQmmIIas" Ids="IST2D1pvXwbLAC8obX2eZp,JQZMHLJV6dSO3vPdFd8f9W" />
         <Link Id="SnOQdXtBqzWNg4qj7HaVvS" Ids="SZyyJMmKTI6LABWuDC2g5f,KeGHKnPMeEoNAVL8fhVejG" />
         <Link Id="RqV99AqbsU0PD7VirtS48u" Ids="AMpPJZ4guaqPKqJWk0c8QD,GwtebZsnBErLhIN6L4o7op" />
-        <Link Id="PNwJzhgBMg4P9boNE1gcjt" Ids="AmaigQOP2MkOgpRNXL6M8y,LghY5eetOZPOXQhYdURfMu" />
         <Link Id="OJLDtY8v4qxOhR5ZZeGC8u" Ids="NMx5QEoMWPwOtrpcJiYeAR,ADUJqJOKBokMAdzq1TKX56" />
         <Link Id="D9zvjsuzCqMQGnAtgxNwSS" Ids="AMpPJZ4guaqPKqJWk0c8QD,P2k0wwu382WPc394RMDXsI" />
         <Link Id="KBGUf4vY57mPvGPv4ta4aj" Ids="ShNZrCkW7b9L99MZfa3569,KWqzbyArnIQN8e7N5MR2JU" />
-        <Link Id="HskNJYZKye6O3eBLUwjKoQ" Ids="CdR8h77DPjbMxnoQ7R8Wff,IzalAzqqm2tQKg5pBweD9G" />
         <Link Id="F1UwdifkQNXMnAtNkoHgh1" Ids="TSNSZHVnpyPMu6lVqleKdA,QKcTQqZIdNaMe7HSPU1tzQ" />
         <Link Id="LtpmfIjcjftO4YeddaotxR" Ids="JRDC1jPuAYdMyKi3WA0f8n,SYwYTROnea2QAWqm9EOBR6" />
         <Link Id="GqGu6m8tGIrQKn1NRvFTl9" Ids="UDWasbiSKDuOX0Os4Vy3IY,EK8ceL7vYjWL7DzK2kOyPl" />
@@ -720,7 +727,6 @@
         <Link Id="GS1WAUfsFREM0YVSRHPLzb" Ids="CYae0Z7QBl5OTjBPe1pD7y,GVoqNMKTAnHPJZxRF3Whaw" />
         <Link Id="RIPfkMJIkq5PlYlw5W2NQM" Ids="TiW4Fxvm5fEO55wHKq57US,LDIs5eEeT2QLCinaClIs6i" />
         <Link Id="AOy9Ip1pKsKNnOoYvaOHZ7" Ids="CtyAdWKkp4bMbijelKK7Bh,MjH3VcI9UIwNyEfwMGbYvM" />
-        <Link Id="NWTmzzBIgGeMfQ3TDXbotv" Ids="AmaigQOP2MkOgpRNXL6M8y,AKwQkdpX6RROacAvdAuzoB" />
         <Link Id="CJ42haFixymNVeB5MZyUsI" Ids="IDOhRRaifrwP6IIEKQU3lm,HB58gmdi5J8MzG0hnIMruk" />
         <Link Id="ObqOl8oXDoEPNEl5zZk5gU" Ids="IU8FPz7MDMjNlT9OlWylp3,PKUOJD4XBGlLeh33qA4TBh" />
         <Link Id="R5VaHyZ2n22NQocGFa7UCy" Ids="Atm3PSibW4dMzDUBLN1iLK,TJGE1ot8aLCMj2UsXejHNJ" />
@@ -728,7 +734,12 @@
         <Link Id="Ipkwt4enREqOGyFZyJ8m9K" Ids="Uc1lQ6BYk2bPRcYQE8bcnC,K1cs6hxIcLDPHHoqAlteIg" />
         <Link Id="FRN3xhTwWCcMKgQyWDuuEA" Ids="GqYsbpVX96SOT1I7uLfUtL,NI0fuWou2ZUNoMM5vWq2PJ" />
         <Link Id="UGiGfgqWOifOuvSBGmu3le" Ids="Pu1EXrHNNn0OW3XnhxuKH1,JR4DUmO3571PBUjWV7u7jg" />
-        <Link Id="OcVfTa4x5J6L3lTQMMr5CX" Ids="B3cUaEzdvd3MhrWiWEjBK9,HEYbYDDuetKOjaB0dxMk8E" />
+        <Link Id="AcVlUgVCiEKOzHgyT4SzpT" Ids="TJ6pbVkamO4LVCi94d5aId,RRZyHyZd4VxOqkOkAmIUxn" />
+        <Link Id="MDaq6fF3S9HL57w4ZVclfH" Ids="B3cUaEzdvd3MhrWiWEjBK9,HEYbYDDuetKOjaB0dxMk8E" />
+        <Link Id="MpdS4c20XwHLKVIyVMAbAy" Ids="AmaigQOP2MkOgpRNXL6M8y,SuhEYL0x0t3PbEde0KODk7" />
+        <Link Id="L9vV7HDz4vLL6K3WNA8bsA" Ids="AmaigQOP2MkOgpRNXL6M8y,LghY5eetOZPOXQhYdURfMu" />
+        <Link Id="FlkK7LUNirdMW1CWgkgowy" Ids="CdR8h77DPjbMxnoQ7R8Wff,IzalAzqqm2tQKg5pBweD9G" />
+        <Link Id="MHT6ZYrQSvwNtJ1oG0cfrq" Ids="AmaigQOP2MkOgpRNXL6M8y,AKwQkdpX6RROacAvdAuzoB" />
       </Patch>
     </Node>
   </Patch>
