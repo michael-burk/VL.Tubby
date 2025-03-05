@@ -9,14 +9,13 @@ shader Tubby_ShaderFX : MaterialExtension
         stage bool smoothNormals = false;  // Toggle for smooth normals
 		stage bool segmentTexCoord = false;
         stage bool chop = false;
-        stage int chunk = 0;
+        stage int chunk = 2;
     }
         
     rgroup PerMaterial
     {
         stage StructuredBuffer<float3> PositionBuffer;
         stage StructuredBuffer<float> SizeBuffer;
-        stage StructuredBuffer<int> ChopBuffer;
     }
 
     stage stream uint VertexID : SV_VertexID;
@@ -46,10 +45,10 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
 {   
 
     streams = input[0];
+    int chunkID = streams.VID - 1;
+    bool _chop = chop;
 
-    bool _chop = false;
-
-    if(chop) _chop = ChopBuffer[streams.VID] > 0;
+    // if(chop) _chop = ChopBuffer[streams.VID] > 0;
 
     // Constants
     const float angleStep = 2.0 * 3.14159 / numSides; // Angle step for circular cross-section
@@ -67,7 +66,7 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
     float3 positionWS2 = mul(PositionBuffer[streams.VID + 1], World).xyz;
     float3 positionWS3 = mul(PositionBuffer[streams.VID + 2], World).xyz;
 
-    if(streams.VID % chunk == 0 && _chop)
+    if(chunkID+1 % chunk == 0 && _chop)
     {   
         positionWS0 = positionWS1;
         positionWS3 = positionWS2;
@@ -108,7 +107,7 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
     float tubeRadius1 = sizeCount > 1 ? SizeBuffer[streams.VID + 1 % sizeCount] : tubeRadius;
 
 
-    if(gsInstanceID > 1 && streams.VID % chunk != 0 && _chop || gsInstanceID > 1 && !_chop){
+    if(gsInstanceID > 1 && chunkID % chunk != 0 && _chop || gsInstanceID > 1 && !_chop){
             // Emit quads between the two rings
                 for (uint i = 0; i < numSides; ++i)
                 {
@@ -175,7 +174,7 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
 
     // Caps
     // || streams.VID % 2 == 0 && gsInstanceID == 0 
-    if (isFirstSegment && !isClosedPath && gsInstanceID == 0 && !_chop || _chop && streams.VID % chunk != 0 && gsInstanceID == 0 )
+    if (isFirstSegment && !isClosedPath && gsInstanceID == 0 && !_chop || _chop && chunkID % chunk != 0 && gsInstanceID == 0 )
     {
         for (uint i = 0; i < numSides; ++i)
         {
@@ -197,7 +196,7 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
             
         }
     }
-    if (isLastSegment && !isClosedPath && gsInstanceID == 0 && !_chop || _chop && streams.VID % chunk != 0 && gsInstanceID == 1 )
+    if (isLastSegment && !isClosedPath && gsInstanceID == 0 && !_chop || _chop && chunkID % chunk != 0 && gsInstanceID == 1 )
     {
         for (uint i = 0; i < numSides; ++i)
         {
