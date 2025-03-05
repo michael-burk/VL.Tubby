@@ -23,7 +23,6 @@ shader Tubby_ShaderFX : MaterialExtension
     stage override void PreTransformPosition()
     {
         streams.VID = streams.VertexID;
-        // streams.PositionWS = PositionBuffer[streams.VertexID];
     }
 
 // Helper function to append a vertex to the triangle stream
@@ -38,7 +37,7 @@ void AppendVertex(inout TriangleStream<Output> triangleStream, float3 position, 
     triangleStream.Append(streams);
 }
 
-[instance(1)]
+[instance(2)]
 [maxvertexcount(56)] // Each segment emits `numSides * 2` triangles (1 quad per segment face)
 stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStream, uint gsInstanceID : SV_GSInstanceID)
 {
@@ -85,73 +84,77 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
     float3 normal1 = normalize(cross(bitangent1, tangent1));
 	
 	
-	// Offset for the tube (Example using GS instancing)
-	float3 offset = float3(0, 0.2, 0) * gsInstanceID; 
-    positionWS1 += offset;
-    positionWS2 += offset;
+	// // Offset for the tube (Example using GS instancing)
+	// float3 offset = float3(0, 0.2, 0) * gsInstanceID; 
+    // positionWS1 += offset;
+    // positionWS2 += offset;
     float tubeRadius = SizeBuffer[streams.VID % sizeCount];
     float tubeRadius1 = sizeCount > 1 ? SizeBuffer[streams.VID + 1 % sizeCount] : tubeRadius;
 
-    // Emit quads between the two rings
-    for (uint i = 0; i < numSides; ++i)
-    {
-        float angle = i * angleStep;
-        float nextAngle = (i + 1) % numSides * angleStep;
+    if(gsInstanceID == 0){
+            // Emit quads between the two rings
+                for (uint i = 0; i < numSides; ++i)
+                {
+                    float angle = i * angleStep;
+                    float nextAngle = (i + 1) % numSides * angleStep;
 
-        // Compute cross-section offsets
-        float3 offset1a = tubeRadius * (cos(angle) * normal0 + sin(angle) * bitangent0);
-        float3 offset2a = tubeRadius * (cos(nextAngle) * normal0 + sin(nextAngle) * bitangent0);
-        float3 offset1b = tubeRadius1 * (cos(angle) * normal1 + sin(angle) * bitangent1);
-        float3 offset2b = tubeRadius1 * (cos(nextAngle) * normal1 + sin(nextAngle) * bitangent1);
+                    // Compute cross-section offsets
+                    float3 offset1a = tubeRadius * (cos(angle) * normal0 + sin(angle) * bitangent0);
+                    float3 offset2a = tubeRadius * (cos(nextAngle) * normal0 + sin(nextAngle) * bitangent0);
+                    float3 offset1b = tubeRadius1 * (cos(angle) * normal1 + sin(angle) * bitangent1);
+                    float3 offset2b = tubeRadius1 * (cos(nextAngle) * normal1 + sin(nextAngle) * bitangent1);
 
-        // Vertex positions
-        float3 vertex1 = positionWS1 + offset1a;
-        float3 vertex2 = positionWS2 + offset1b;
-        float3 vertex3 = positionWS2 + offset2b;
-        float3 vertex4 = positionWS1 + offset2a;
+                    // Vertex positions
+                    float3 vertex1 = positionWS1 + offset1a;
+                    float3 vertex2 = positionWS2 + offset1b;
+                    float3 vertex3 = positionWS2 + offset2b;
+                    float3 vertex4 = positionWS1 + offset2a;
 
-        // // Calculate the center point of the face
-        // float3 center = (vertex1 + vertex2 + vertex3 + vertex4) / 4;
+                    // // Calculate the center point of the face
+                    // float3 center = (vertex1 + vertex2 + vertex3 + vertex4) / 4;
 
-        // // get the view direction in world space
-        // float3 viewDir = Eye - mul(float4(center,1), World);
+                    // // get the view direction in world space
+                    // float3 viewDir = Eye - mul(float4(center,1), World);
 
-		// Calculate normals
-		float3 quadNormal = normalize(cross(vertex4 - vertex1, vertex2 - vertex1));
-
-
-        //   // Check if the face is facing the camera
-        // if (dot(viewDir, mul(float4(quadNormal,1), World)) < 0)
-        // {
-        //     continue;
-        // }
+                    // Calculate normals
+                    float3 quadNormal = normalize(cross(vertex4 - vertex1, vertex2 - vertex1));
 
 
-		// Derive smooth normals from existing offsets (already contain cos/sin components)
-		float3 n1 = smoothNormals ? (offset1a / tubeRadius) : quadNormal;
-		float3 n2 = smoothNormals ? (offset1b / tubeRadius) : quadNormal;
-		float3 n4 = smoothNormals ? (offset2a / tubeRadius) : quadNormal;
-		float3 n3 = smoothNormals ? (offset2b / tubeRadius) : quadNormal;
-
-        // Texture coordinates, toggle full / per segment 
-        float segmentHeight = 1.0/positionCount;        
-        float texCoordY = input[0].VID*segmentHeight;
-		float texCoordX1 = float(i)/float(numSides);
-		float texCoordX2 = float(i+1)/float(numSides);
-		
-		float2 texCoord1 = segmentTexCoord ? (float2(texCoordX1,0)) : (float2(texCoordX1,texCoordY));
-		float2 texCoord2 = segmentTexCoord ? (float2(texCoordX2,1)) : (float2(texCoordX2,texCoordY + segmentHeight));
+                    //   // Check if the face is facing the camera
+                    // if (dot(viewDir, mul(float4(quadNormal,1), World)) < 0)
+                    // {
+                    //     continue;
+                    // }
 
 
-        // Emit triangles
-        AppendVertex(triangleStream, vertex1, n1, float2(texCoord1.x, texCoord1.y));
-        AppendVertex(triangleStream, vertex2, n2, float2(texCoord1.x, texCoord2.y));
-        AppendVertex(triangleStream, vertex4, n4, float2(texCoord2.x, texCoord1.y));
-        AppendVertex(triangleStream, vertex3, n3, float2(texCoord2.x, texCoord2.y));
+                    // Derive smooth normals from existing offsets (already contain cos/sin components)
+                    float3 n1 = smoothNormals ? (offset1a / tubeRadius) : quadNormal;
+                    float3 n2 = smoothNormals ? (offset1b / tubeRadius) : quadNormal;
+                    float3 n4 = smoothNormals ? (offset2a / tubeRadius) : quadNormal;
+                    float3 n3 = smoothNormals ? (offset2b / tubeRadius) : quadNormal;
+
+                    // Texture coordinates, toggle full / per segment 
+                    float segmentHeight = 1.0/positionCount;        
+                    float texCoordY = input[0].VID*segmentHeight;
+                    float texCoordX1 = float(i)/float(numSides);
+                    float texCoordX2 = float(i+1)/float(numSides);
+                    
+                    float2 texCoord1 = segmentTexCoord ? (float2(texCoordX1,0)) : (float2(texCoordX1,texCoordY));
+                    float2 texCoord2 = segmentTexCoord ? (float2(texCoordX2,1)) : (float2(texCoordX2,texCoordY + segmentHeight));
+
+
+                    // Emit triangles
+                    AppendVertex(triangleStream, vertex1, n1, float2(texCoord1.x, texCoord1.y));
+                    AppendVertex(triangleStream, vertex2, n2, float2(texCoord1.x, texCoord2.y));
+                    AppendVertex(triangleStream, vertex4, n4, float2(texCoord2.x, texCoord1.y));
+                    AppendVertex(triangleStream, vertex3, n3, float2(texCoord2.x, texCoord2.y));
+                }
     }
 
+
+
     // Caps (unchanged)
-    if (isFirstSegment && !isClosedPath)
+    if (isFirstSegment && !isClosedPath && gsInstanceID == 1)
     {
         for (uint i = 0; i < numSides; ++i)
         {
@@ -173,7 +176,7 @@ stage void GSMain(line Input input[2], inout TriangleStream<Output> triangleStre
             
         }
     }
-    else if (isLastSegment && !isClosedPath)
+    else if (isLastSegment && !isClosedPath && gsInstanceID == 1)
     {
         for (uint i = 0; i < numSides; ++i)
         {
